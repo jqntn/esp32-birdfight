@@ -1,15 +1,14 @@
-﻿#include <cstdint>
-#include <cstdio>
-#include <ctime>
-#include <process.h>
+﻿#include <process.h>
 #include <raylib.h>
 #include <rlgl.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <time.h>
 
-extern "C"
-{
-  extern void LoadFontDefault(void);
-  extern void UnloadFontDefault(void);
-}
+extern void
+LoadFontDefault(void);
+extern void
+UnloadFontDefault(void);
 
 #define PRINT_RGBA(col)                                                        \
   printf("RGBA(%d, %d, %d, %d)\n",                                             \
@@ -19,7 +18,7 @@ extern "C"
          ((col) >> 24) & 0xFF)
 
 int
-main()
+main(void)
 {
   SetConfigFlags(FLAG_WINDOW_TOPMOST);
   InitWindow(320, 240, "birdfight");
@@ -46,7 +45,7 @@ main()
   Rectangle rec = GetFontDefault().recs[95];
   SetShapesTexture(
     GetFontDefault().texture,
-    Rectangle{ rec.x + 1, rec.y + 1, rec.width - 2, rec.height - 2 });
+    (Rectangle){ rec.x + 1, rec.y + 1, rec.width - 2, rec.height - 2 });
 
   rlViewport(0, 0, 320, 240);
   rlMatrixMode(RL_PROJECTION);
@@ -60,7 +59,7 @@ main()
   DrawCircle(320 * 0.5f, 240 * 0.5f, 100.0f, GREEN);
   EndDrawing();
 
-  uint32_t* dst = new uint32_t[320 * 240];
+  uint32_t* dst = malloc(sizeof(uint32_t) * 320 * 240);
   rlCopyFramebuffer(0, 0, 320, 240, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, dst);
 
   for (int i = 0; i < 320 * 240; i++) {
@@ -72,7 +71,7 @@ main()
   uint32_t c = dst[0];
   PRINT_RGBA(c);
 
-  Image img{
+  Image img = {
     .data = dst,
     .width = 320,
     .height = 240,
@@ -81,6 +80,8 @@ main()
   };
   ExportImage(img, "out.png");
   system("out.png");
+
+  free(dst);
 
   UnloadFontDefault();
 

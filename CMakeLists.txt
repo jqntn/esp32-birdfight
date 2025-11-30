@@ -4,7 +4,7 @@ include(FetchContent)
 
 set(FETCHCONTENT_QUIET OFF)
 
-project(birdfight LANGUAGES CXX)
+project(birdfight LANGUAGES C)
 
 FetchContent_Declare(sdl URL "https://github.com/libsdl-org/SDL/archive/refs/tags/release-3.2.26.tar.gz")
 FetchContent_MakeAvailable(sdl)
@@ -22,9 +22,7 @@ target_compile_definitions(raylib PRIVATE
 
 add_executable(birdfight)
 
-set_property(TARGET birdfight PROPERTY CXX_STANDARD 20)
-
-file(GLOB_RECURSE birdfight_src "src/*.cpp")
+file(GLOB_RECURSE birdfight_src "src/*.c")
 target_sources(birdfight PRIVATE "${birdfight_src}")
 
 target_include_directories(birdfight PRIVATE "include")
