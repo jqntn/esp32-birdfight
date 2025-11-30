@@ -3,12 +3,18 @@
 #include <ctime>
 #include <process.h>
 #include <raylib.h>
+#include <raymath.h>
 #include <rlgl.h>
 
 extern "C"
 {
   void LoadFontDefault(void);
   void UnloadFontDefault(void);
+}
+
+extern "C"
+{
+  extern bool isGpuReady;
 }
 
 constexpr int ESP_W = 320;
@@ -37,7 +43,11 @@ tick()
 static void
 draw()
 {
+#ifdef ESP32
+  rlLoadIdentity();
+#else
   BeginDrawing();
+#endif
   ClearBackground(RED);
   DrawCircle((float)ESP_W * 0.5f, (float)ESP_H * 0.5f, 100.0f, GREEN);
   EndDrawing();
@@ -61,12 +71,7 @@ init_esp()
   SetRandomSeed((unsigned int)time(nullptr));
 
   rlglInit(ESP_W, ESP_H);
-
-  LoadFontDefault();
-  Rectangle rec = GetFontDefault().recs[95];
-  SetShapesTexture(
-    GetFontDefault().texture,
-    Rectangle{ rec.x + 1, rec.y + 1, rec.width - 2, rec.height - 2 });
+  isGpuReady = true;
 
   rlViewport(0, 0, ESP_W, ESP_H);
   rlMatrixMode(RL_PROJECTION);
@@ -74,6 +79,11 @@ init_esp()
   rlOrtho(0.0, (double)ESP_W, (double)ESP_H, 0.0, 0.0, 1.0);
   rlMatrixMode(RL_MODELVIEW);
   rlLoadIdentity();
+
+  LoadFontDefault();
+  Rectangle rec = GetFontDefault().recs[95];
+  SetShapesTexture(GetFontDefault().texture,
+                   { rec.x + 1, rec.y + 1, rec.width - 2, rec.height - 2 });
 }
 
 static void
