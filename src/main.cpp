@@ -43,21 +43,8 @@ tick()
 static void
 draw()
 {
-#ifdef ESP32
-  rlLoadIdentity();
-#else
-  BeginDrawing();
-#endif
   ClearBackground(RED);
   DrawCircle((float)ESP_W * 0.5f, (float)ESP_H * 0.5f, 100.0f, GREEN);
-  EndDrawing();
-}
-
-static void
-loop()
-{
-  tick();
-  draw();
 }
 
 static void
@@ -90,7 +77,10 @@ static void
 loop_esp()
 {
   // while (true) {
-  loop();
+  tick();
+  rlLoadIdentity();
+  draw();
+  rlDrawRenderBatchActive();
 
   uint32_t* dst = new uint32_t[ESP_W * ESP_H];
 
@@ -130,7 +120,10 @@ static void
 loop_pc()
 {
   while (!WindowShouldClose()) {
-    loop();
+    tick();
+    BeginDrawing();
+    draw();
+    EndDrawing();
   }
 }
 
