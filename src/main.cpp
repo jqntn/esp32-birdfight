@@ -11,36 +11,56 @@ extern "C"
   void UnloadFontDefault(void);
 }
 
-#define PRINT_RGBA(col)                                                        \
-  printf("RGBA(%d, %d, %d, %d)\n",                                             \
-         (col) & 0xFF,                                                         \
-         ((col) >> 8) & 0xFF,                                                  \
-         ((col) >> 16) & 0xFF,                                                 \
-         ((col) >> 24) & 0xFF)
+constexpr int ESP_W = 320;
+constexpr int ESP_H = 240;
 
-int
-main()
+static void
+print_rgba(uint32_t col)
 {
-  SetConfigFlags(FLAG_WINDOW_TOPMOST);
-  InitWindow(320, 240, "birdfight");
-  SetExitKey(KEY_NULL);
+  printf("RGBA(%d, %d, %d, %d)\n",
+         (col) & 0xFF,
+         ((col) >> 8) & 0xFF,
+         ((col) >> 16) & 0xFF,
+         ((col) >> 24) & 0xFF);
+}
 
-  while (!WindowShouldClose()) {
-    BeginDrawing();
-    ClearBackground(RED);
-    DrawCircle(320 * 0.5f, 240 * 0.5f, 100.0f, GREEN);
-    EndDrawing();
-    SwapScreenBuffer();
-    PollInputEvents();
-  }
+static void
+init()
+{
+}
 
-  CloseWindow();
+static void
+tick()
+{
+}
 
-  /**/
+static void
+draw()
+{
+  BeginDrawing();
+  ClearBackground(RED);
+  DrawCircle((float)ESP_W * 0.5f, (float)ESP_H * 0.5f, 100.0f, GREEN);
+  EndDrawing();
+}
 
-  SetRandomSeed((unsigned int)time(NULL));
+static void
+loop()
+{
+  tick();
+  draw();
+}
 
-  rlglInit(320, 240);
+static void
+close()
+{
+}
+
+static void
+init_esp()
+{
+  SetRandomSeed((unsigned int)time(nullptr));
+
+  rlglInit(ESP_W, ESP_H);
 
   LoadFontDefault();
   Rectangle rec = GetFontDefault().recs[95];
@@ -48,41 +68,108 @@ main()
     GetFontDefault().texture,
     Rectangle{ rec.x + 1, rec.y + 1, rec.width - 2, rec.height - 2 });
 
-  rlViewport(0, 0, 320, 240);
+  rlViewport(0, 0, ESP_W, ESP_H);
   rlMatrixMode(RL_PROJECTION);
   rlLoadIdentity();
-  rlOrtho(0.0, 320.0, 240.0, 0.0, 0.0, 1.0);
+  rlOrtho(0.0, (double)ESP_W, (double)ESP_H, 0.0, 0.0, 1.0);
   rlMatrixMode(RL_MODELVIEW);
   rlLoadIdentity();
+}
 
-  BeginDrawing();
-  ClearBackground(RED);
-  DrawCircle(320 * 0.5f, 240 * 0.5f, 100.0f, GREEN);
-  EndDrawing();
+static void
+loop_esp()
+{
+  // while (true) {
+  loop();
 
-  uint32_t* dst = new uint32_t[320 * 240];
-  rlCopyFramebuffer(0, 0, 320, 240, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, dst);
+  uint32_t* dst = new uint32_t[ESP_W * ESP_H];
 
-  for (int i = 0; i < 320 * 240; i++) {
-    uint32_t c = dst[i];
-    dst[i] =
-      (c & 0xFF00FF00) | ((c & 0x000000FF) << 16) | ((c & 0x00FF0000) >> 16);
-  }
+  rlCopyFramebuffer(0, 0, ESP_W, ESP_H, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, dst);
 
-  uint32_t c = dst[0];
-  PRINT_RGBA(c);
+  print_rgba(dst[0]);
 
   Image img = {
     .data = dst,
-    .width = 320,
-    .height = 240,
+    .width = ESP_W,
+    .height = ESP_H,
     .mipmaps = 1,
     .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
   };
   ExportImage(img, "out.png");
   system("out.png");
+  //}
+}
 
+static void
+close_esp()
+{
   UnloadFontDefault();
 
   rlglClose();
+}
+
+static void
+init_pc()
+{
+  SetConfigFlags(FLAG_VSYNC_HINT);
+  InitWindow(ESP_W, ESP_H, "birdfight");
+  SetExitKey(KEY_NULL);
+}
+
+static void
+loop_pc()
+{
+  while (!WindowShouldClose()) {
+    loop();
+  }
+}
+
+static void
+close_pc()
+{
+  CloseWindow();
+}
+
+static void
+init_platform()
+{
+#ifdef ESP32
+  init_esp();
+#else
+  init_pc();
+#endif
+}
+
+static void
+loop_platform()
+{
+#ifdef ESP32
+  loop_esp();
+#else
+  loop_pc();
+#endif
+}
+
+static void
+close_platform()
+{
+#ifdef ESP32
+  close_esp();
+#else
+  close_pc();
+#endif
+}
+
+int
+main()
+{
+  init_platform();
+
+  init();
+
+  loop_platform();
+
+  close();
+
+  close_platform();
 }
