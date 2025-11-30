@@ -1,21 +1,10 @@
-﻿#include <cstdint>
+﻿#include <algorithm>
+#include <cstdint>
 #include <cstdio>
-#include <ctime>
-#include <process.h>
+#include <cstdlib>
 #include <raylib.h>
 #include <raymath.h>
 #include <rlgl.h>
-
-extern "C"
-{
-  void LoadFontDefault(void);
-  void UnloadFontDefault(void);
-}
-
-extern "C"
-{
-  extern bool isGpuReady;
-}
 
 constexpr int ESP_W = 320;
 constexpr int ESP_H = 240;
@@ -44,123 +33,91 @@ static void
 draw()
 {
   ClearBackground(RED);
-  DrawCircle((float)ESP_W * 0.5f, (float)ESP_H * 0.5f, 100.0f, GREEN);
+  DrawCircle(ESP_W * 0.5f, ESP_H * 0.5f, 100.0f, GREEN);
 }
 
 static void
 close()
 {
-}
-
-static void
-init_esp()
-{
-  SetRandomSeed((unsigned int)time(nullptr));
-
-  rlglInit(ESP_W, ESP_H);
-  isGpuReady = true;
-
-  rlViewport(0, 0, ESP_W, ESP_H);
-  rlMatrixMode(RL_PROJECTION);
-  rlLoadIdentity();
-  rlOrtho(0.0, (double)ESP_W, (double)ESP_H, 0.0, 0.0, 1.0);
-  rlMatrixMode(RL_MODELVIEW);
-  rlLoadIdentity();
-
-  LoadFontDefault();
-  Rectangle rec = GetFontDefault().recs[95];
-  SetShapesTexture(GetFontDefault().texture,
-                   { rec.x + 1, rec.y + 1, rec.width - 2, rec.height - 2 });
-}
-
-static void
-loop_esp()
-{
-  // while (true) {
-  tick();
-  rlLoadIdentity();
-  draw();
-  rlDrawRenderBatchActive();
-
-  uint32_t* dst = new uint32_t[ESP_W * ESP_H];
-
-  rlCopyFramebuffer(0, 0, ESP_W, ESP_H, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, dst);
-
-  print_rgba(dst[0]);
-
+#ifdef ESP32
   Image img = {
-    .data = dst,
+    .data = new uint32_t[ESP_W * ESP_H],
     .width = ESP_W,
     .height = ESP_H,
     .mipmaps = 1,
     .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
   };
+
+  rlCopyFramebuffer(
+    0, 0, ESP_W, ESP_H, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, img.data);
+
   ExportImage(img, "out.png");
+
   system("out.png");
-  //}
-}
-
-static void
-close_esp()
-{
-  UnloadFontDefault();
-
-  rlglClose();
-}
-
-static void
-init_pc()
-{
-  SetConfigFlags(FLAG_VSYNC_HINT);
-  InitWindow(ESP_W, ESP_H, "birdfight");
-  SetExitKey(KEY_NULL);
-}
-
-static void
-loop_pc()
-{
-  while (!WindowShouldClose()) {
-    tick();
-    BeginDrawing();
-    draw();
-    EndDrawing();
-  }
-}
-
-static void
-close_pc()
-{
-  CloseWindow();
+#endif
 }
 
 static void
 init_platform()
 {
+  SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIDDEN);
 #ifdef ESP32
-  init_esp();
+  InitWindow(ESP_W, ESP_H, "birdfight");
 #else
-  init_pc();
+  InitWindow(0, 0, "birdfight");
+  int f = GetScreenHeight() / ESP_H / 2;
+  SetWindowSize(ESP_W * f, ESP_H * f);
+  SetWindowPosition((GetMonitorWidth(0) - GetScreenWidth()) / 2,
+                    (GetMonitorHeight(0) - GetScreenHeight()) / 2);
 #endif
+  SetExitKey(KEY_NULL);
+  ClearWindowState(FLAG_WINDOW_HIDDEN);
 }
 
 static void
 loop_platform()
 {
 #ifdef ESP32
-  loop_esp();
+  tick();
+  BeginDrawing();
+  draw();
+  EndDrawing();
 #else
-  loop_pc();
+  static RenderTexture2D rt = LoadRenderTexture(ESP_W, ESP_H);
+
+  while (!WindowShouldClose()) {
+    tick();
+
+    BeginTextureMode(rt);
+    draw();
+    EndTextureMode();
+
+    BeginDrawing();
+    ClearBackground(BLACK);
+
+    float s = std::min((float)GetScreenWidth() / ESP_W,
+                       (float)GetScreenHeight() / ESP_H);
+
+    int w = ESP_W * s;
+    int h = ESP_H * s;
+    int x = (GetScreenWidth() - w) / 2;
+    int y = (GetScreenHeight() - h) / 2;
+
+    DrawTexturePro(rt.texture,
+                   Rectangle{ 0.0f, 0.0f, (float)ESP_W, -(float)ESP_H },
+                   Rectangle{ (float)x, (float)y, (float)w, (float)h },
+                   Vector2Zeros,
+                   0.0f,
+                   WHITE);
+    EndDrawing();
+  }
 #endif
 }
 
 static void
 close_platform()
 {
-#ifdef ESP32
-  close_esp();
-#else
-  close_pc();
-#endif
+  CloseWindow();
 }
 
 int

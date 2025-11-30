@@ -22,6 +22,8 @@ target_include_directories(birdfight PRIVATE "include")
 target_link_libraries(birdfight PRIVATE raylib)
 
 if(ESP32)
+  target_sources(birdfight PRIVATE "ext/rcore_esp32.cpp")
+
   target_compile_definitions(birdfight PRIVATE ESP32)
   target_compile_definitions(raylib PRIVATE
     GRAPHICS_API_OPENGL_11_SOFTWARE
@@ -30,6 +32,7 @@ if(ESP32)
     #SW_COLOR_BUFFER_BITS=16
     #SW_DEPTH_BUFFER_BITS=16
   )
+
   get_target_property(raylib_cdefs raylib COMPILE_DEFINITIONS)
   list(FILTER raylib_cdefs EXCLUDE REGEX [[^PLATFORM_DESKTOP$]])
   set_property(TARGET raylib PROPERTY COMPILE_DEFINITIONS ${raylib_cdefs})

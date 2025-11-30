@@ -537,6 +537,8 @@ extern "C"
   // Initialize platform: graphics, inputs and more
   int InitPlatform(void)
   {
+    CORE.Window.ready = true;
+
     CORE.Window.render.width = CORE.Window.screen.width;
     CORE.Window.render.height = CORE.Window.screen.height;
     CORE.Window.currentFbo.width = CORE.Window.render.width;
@@ -565,7 +567,7 @@ extern "C"
     // TODO: Initialize storage system
     CORE.Storage.basePath = GetWorkingDirectory();
 
-    TRACELOG(LOG_INFO, "PLATFORM: CUSTOM: Initialized successfully");
+    TRACELOG(LOG_INFO, "PLATFORM: ESP32: Initialized successfully");
 
     return 0;
   }
