@@ -10,10 +10,15 @@ FetchContent_Declare(sdl URL "https://github.com/libsdl-org/SDL/archive/refs/tag
 FetchContent_MakeAvailable(sdl)
 
 set(PLATFORM "SDL" CACHE STRING "" FORCE)
-set(GRAPHICS "GRAPHICS_API_OPENGL_11_SOFTWARE" CACHE STRING "" FORCE)
-
 FetchContent_Declare(raylib URL "https://github.com/raysan5/raylib/archive/refs/heads/master.tar.gz")
 FetchContent_MakeAvailable(raylib)
+target_compile_definitions(raylib PRIVATE
+    GRAPHICS_API_OPENGL_11_SOFTWARE
+    SUPPORT_CUSTOM_FRAME_CONTROL
+    SW_GL_FRAMEBUFFER_COPY_BGRA=1
+    #SW_COLOR_BUFFER_BITS=16
+    #SW_DEPTH_BUFFER_BITS=16
+)
 
 add_executable(birdfight)
 
