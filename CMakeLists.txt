@@ -30,4 +30,7 @@ if(ESP32)
     #SW_COLOR_BUFFER_BITS=16
     #SW_DEPTH_BUFFER_BITS=16
   )
+  get_target_property(raylib_cdefs raylib COMPILE_DEFINITIONS)
+  list(FILTER raylib_cdefs EXCLUDE REGEX [[^PLATFORM_DESKTOP$]])
+  set_property(TARGET raylib PROPERTY COMPILE_DEFINITIONS ${raylib_cdefs})
 endif()
