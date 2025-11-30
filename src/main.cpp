@@ -7,8 +7,8 @@
 
 extern "C"
 {
-  extern void LoadFontDefault(void);
-  extern void UnloadFontDefault(void);
+  void LoadFontDefault(void);
+  void UnloadFontDefault(void);
 }
 
 #define PRINT_RGBA(col)                                                        \
@@ -72,7 +72,7 @@ main()
   uint32_t c = dst[0];
   PRINT_RGBA(c);
 
-  Image img{
+  Image img = {
     .data = dst,
     .width = 320,
     .height = 240,

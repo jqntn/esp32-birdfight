@@ -22,7 +22,7 @@ target_compile_definitions(raylib PRIVATE
 
 add_executable(birdfight)
 
-set_property(TARGET birdfight PROPERTY CXX_STANDARD 20)
+set_property(TARGET birdfight PROPERTY CXX_STANDARD 23)
 
 file(GLOB_RECURSE birdfight_src "src/*.cpp")
 target_sources(birdfight PRIVATE "${birdfight_src}")
